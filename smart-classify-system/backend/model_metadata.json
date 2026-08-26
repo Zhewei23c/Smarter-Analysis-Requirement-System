@@ -1,0 +1,6 @@
+{
+  "model_type": "LinearSVC",
+  "accuracy": 1.0,
+  "training_samples": 203,
+  "feature_count": 5000
+}

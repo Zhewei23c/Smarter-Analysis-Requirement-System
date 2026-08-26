@@ -1,0 +1,192 @@
+[
+    {
+        "id": "1000",
+        "text": "The system shall allow new users (students and tutors) to register by providing necessary details like name, email, password, and role.",
+        "type": "Functional",
+        "system_type": "Education",
+        "submitted_by": "qq1234",
+        "timestamp": "2025-12-09 03:40:04",
+        "status": "approved",
+        "votes": {
+            "approve": [
+                "admin",
+                "admin_sarah",
+                "admin_mike"
+            ],
+            "reject": []
+        },
+        "final_decision_reason": "Majority Voted Approve"
+    },
+    {
+        "id": "1001",
+        "text": "The system shall allow new users (students and tutors) to register by providing necessary details like name, email, password, and role.\r\n\r\n",
+        "type": "Functional",
+        "system_type": "Education",
+        "submitted_by": "qq1234",
+        "timestamp": "2025-12-09 04:06:49",
+        "status": "approved",
+        "final_decision_reason": "Majority Voted Approve",
+        "votes": {
+            "approve": [
+                "admin",
+                "admin_sarah",
+                "admin_mike"
+            ],
+            "reject": []
+        }
+    },
+    {
+        "id": "1002",
+        "text": "The system shall allow new users (students and tutors) to register by providing necessary details like name, email, password, and role.\r\n",
+        "type": "Functional",
+        "system_type": "Education",
+        "submitted_by": "qq1234",
+        "timestamp": "2025-12-09 04:17:35",
+        "status": "approved",
+        "final_decision_reason": "Majority Voted Approve",
+        "votes": {
+            "approve": [
+                "admin",
+                "admin_mike",
+                "admin_sarah"
+            ],
+            "reject": []
+        }
+    },
+    {
+        "id": "1003",
+        "text": "The system shall allow new users (students and tutors) to register by providing necessary details like name, email, password, and role.",
+        "type": "Functional",
+        "system_type": "General",
+        "submitted_by": "qq1234",
+        "timestamp": "2025-12-09 10:09:31",
+        "status": "approved",
+        "final_decision_reason": "Majority Voted Approve",
+        "votes": {
+            "approve": [
+                "admin",
+                "admin_mike",
+                "admin_lee"
+            ],
+            "reject": []
+        }
+    },
+    {
+        "id": "1004",
+        "text": "The system shall allow new users (students and tutors) to register by providing necessary details like name, email, password, and role",
+        "type": "Functional",
+        "system_type": "Education",
+        "submitted_by": "qq1234",
+        "timestamp": "2025-12-09 10:37:45",
+        "status": "rejected",
+        "final_decision_reason": "Time Expired",
+        "votes": {
+            "approve": [
+                "admin"
+            ],
+            "reject": [
+                "admin_mike"
+            ]
+        }
+    },
+    {
+        "id": "1005",
+        "text": "The system shall be available 99.9% of the time during business hours (9 AM - 11 PM).",
+        "type": "Functional",
+        "system_type": "General",
+        "submitted_by": "qq1234",
+        "timestamp": "2025-12-18 22:34:22",
+        "status": "rejected",
+        "final_decision_reason": "Rejected (Time Expired - Tie Vote)",
+        "votes": {
+            "approve": [
+                "admin"
+            ],
+            "reject": [
+                "aa123"
+            ]
+        },
+        "vote_tracking": {
+            "admin": 3,
+            "aa123": 3
+        }
+    },
+    {
+        "id": "1006",
+        "text": "The system shall ensure that the response time for any user action does not exceed 2 seconds under normal load conditions that for 1000 concurrent users. ",
+        "type": "Functional",
+        "system_type": "General",
+        "submitted_by": "qq1234",
+        "timestamp": "2025-12-24 03:00:32",
+        "status": "approved",
+        "final_decision_reason": "Approved (Time Expired - Majority Vote)",
+        "votes": {
+            "approve": [
+                "admin",
+                "admin_wong"
+            ],
+            "reject": []
+        },
+        "vote_tracking": {
+            "admin": 0,
+            "admin_wong": 0
+        }
+    },
+    {
+        "id": "1007",
+        "text": "The purpose of this Requirements Elicitation document is to provide a clear understanding as to what actually he is SDMSTM system and to identify the critical requirements essential for the project s provides a general overview of the entire project.",
+        "type": "Functional",
+        "system_type": "General",
+        "submitted_by": "qq1234",
+        "timestamp": "2025-12-30 01:01:40",
+        "status": "rejected",
+        "final_decision_reason": "Rejected (Time Expired - Majority Vote)",
+        "votes": {
+            "approve": [],
+            "reject": [
+                "admin"
+            ]
+        },
+        "vote_tracking": {
+            "admin": 3
+        }
+    },
+    {
+        "id": "1008",
+        "text": "The system allow users to analysis file",
+        "type": "Functional",
+        "system_type": "Education",
+        "submitted_by": "qq1234",
+        "timestamp": "2025-12-30 23:11:44",
+        "status": "rejected",
+        "final_decision_reason": "Rejected (Time Expired - Tie Vote)",
+        "votes": {
+            "approve": [],
+            "reject": []
+        },
+        "vote_tracking": {}
+    },
+    {
+        "id": "1009",
+        "text": "System shall allow the users upload the file",
+        "type": "Functional",
+        "system_type": "General",
+        "submitted_by": "QQ1234",
+        "timestamp": "2026-01-07 14:45:12",
+        "status": "pending",
+        "final_decision_reason": "",
+        "votes": {
+            "approve": [
+                "admin",
+                "admin_wong",
+                "admin_mike"
+            ],
+            "reject": []
+        },
+        "vote_tracking": {
+            "admin": 0,
+            "admin_wong": 0,
+            "admin_mike": 0
+        }
+    }
+]

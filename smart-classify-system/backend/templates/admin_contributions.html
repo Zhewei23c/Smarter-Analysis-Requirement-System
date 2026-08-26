@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Contributions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* --- 统一的导航栏样式 (From History) --- */
+        .admin-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .admin-nav-links { display: flex; gap: 20px; }
+        .admin-nav-links a { text-decoration: none; color: #636e72; font-weight: 600; padding: 8px 16px; border-radius: 8px; transition: 0.3s; }
+        .admin-nav-links a:hover, .admin-nav-links a.active { background: #6C63FF; color: white; }
+
+        /* --- Contributions 页面特有的样式 --- */
+        .col-container { display: flex; gap: 30px; } 
+        .col { flex: 1; }
+        .card-item { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #f0f0f0; transition: 0.3s; }
+        .card-item:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+        .domain-badge { background: #F3F4F6; color: #666; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 8px; font-weight: 600; }
+        .vote-count { display: flex; gap: 15px; font-size: 0.9rem; font-weight: 600; margin-top: 10px; }
+        .vote-actions { display: flex; gap: 8px; }
+        
+        .btn-sm { padding: 6px 12px; font-size: 0.85rem; width: auto; border-radius: 8px; cursor: pointer; border: none; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s;}
+        
+        .btn-approve { background: #10B981; }
+        .btn-approve:hover { background: #059669; }
+        
+        .btn-reject { background: #EF4444; }
+        .btn-reject:hover { background: #DC2626; }
+        
+        .btn-disabled { background: #E5E7EB; color: #9CA3AF; cursor: not-allowed; box-shadow: none; }
+        
+        div.swal2-container { z-index: 20000 !important; }
+    </style>
+</head>
+<body>
+    <nav style="position: fixed; top: 0; left: 0; width: 100%; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 100; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);">
+        <h3 style="color: #6C63FF; margin: 0;">Admin Dashboard</h3>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <span style="color: #636e72; font-size: 14px;">Logged as: <strong>{{ current_admin }}</strong></span>
+            <a href="{{ url_for('logout') }}" class="btn" style="width: auto; padding: 8px 20px; background: #ff7675; margin: 0; font-size: 14px;">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top: 100px; max-width: 1200px; margin: 0 auto; padding-bottom: 50px;">
+        <div class="glass-card" style="text-align: left; padding-top: 30px;">
+            
+            <div class="admin-nav">
+                <div class="admin-nav-links">
+                    <a href="{{ url_for('admin_users') }}"><i class="fas fa-users"></i> Users</a>
+                    <a href="{{ url_for('admin_contributions') }}" class="active"><i class="fas fa-inbox"></i> Contributions</a>
+                    <a href="{{ url_for('admin_history') }}"><i class="fas fa-history"></i> History</a>
+                </div>
+                <button onclick="confirmRetrain('{{ url_for('admin_train_model') }}')" class="btn" style="width: auto; font-size: 0.9rem; background: linear-gradient(135deg, #8B5CF6, #6D28D9); padding: 8px 16px; margin: 0;">
+                    <i class="fas fa-sync-alt"></i> Retrain Model
+                </button>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for category, message in messages %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}{% endif %}
+            {% endwith %}
+
+            <div class="col-container">
+                <div class="col">
+                    <h3 style="color: #1F2937; margin-bottom: 20px;"><i class="fas fa-hourglass-half"></i> Pending Review</h3>
+                    
+                    {% for sub in submissions %}{% if sub.status == 'pending' %}
+                    
+                    {% set user_used_count = sub.vote_tracking.get(current_admin, 0) %}
+                    {% set remaining_changes = 3 - user_used_count %}
+                    
+                    {% set has_voted_approve = current_admin in sub.votes.approve %}
+                    {% set has_voted_reject = current_admin in sub.votes.reject %}
+                    
+                    <div class="card-item">
+                        <div style="display:flex; align-items:center; margin-bottom:8px;">
+                            <span style="font-weight:700; color:var(--primary);">{{ sub.type }}</span>
+                            <span class="domain-badge">{{ sub.system_type }}</span>
+                        </div>
+                        <p style="margin-bottom: 10px; font-size: 0.95rem; color:#374151;">{{ sub.text }}</p>
+                        <div style="font-size:0.8rem; color:#9CA3AF; margin-bottom:15px;">By: {{ sub.submitted_by }} • {{ sub.timestamp }}</div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div class="vote-count">
+                                <span style="color:#10B981;"><i class="fas fa-thumbs-up"></i> {{ sub.votes.approve|length }}</span>
+                                <span style="color:#EF4444;"><i class="fas fa-thumbs-down"></i> {{ sub.votes.reject|length }}</span>
+                            </div>
+
+                            <div class="vote-actions">
+                                <button onclick="confirmVote('approve', '{{ url_for('admin_vote', sub_id=sub.id, action='approve') }}', {{ remaining_changes }})" 
+                                        class="btn-sm {{ 'btn-disabled' if has_voted_approve else 'btn-approve' }}"
+                                        {{ 'disabled' if has_voted_approve else '' }}>
+                                    {{ 'Voted' if has_voted_approve else 'Approve' }}
+                                </button>
+
+                                <button onclick="confirmVote('reject', '{{ url_for('admin_vote', sub_id=sub.id, action='reject') }}', {{ remaining_changes }})" 
+                                        class="btn-sm {{ 'btn-disabled' if has_voted_reject else 'btn-reject' }}"
+                                        {{ 'disabled' if has_voted_reject else '' }}>
+                                    {{ 'Voted' if has_voted_reject else 'Reject' }}
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top:12px; height:4px; background:#f3f4f6; border-radius:2px; overflow:hidden; display:flex;">
+                            {% set total_votes = sub.votes.approve|length + sub.votes.reject|length %}
+                            {% if total_votes > 0 %}
+                                <div style="height:100%; width:{{ (sub.votes.approve|length / total_votes) * 100 }}%; background:#10B981;"></div>
+                                <div style="height:100%; width:{{ (sub.votes.reject|length / total_votes) * 100 }}%; background:#EF4444;"></div>
+                            {% else %}
+                                <div style="width:100%; background:#eee;"></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}{% endfor %}
+                </div>
+
+                <div class="col">
+                    <h3 style="color: #6B7280; margin-bottom: 20px;"><i class="fas fa-history"></i> Decision History</h3>
+                    <div style="max-height: 600px; overflow-y: auto; padding-right: 10px;">
+                        {% for sub in submissions %}{% if sub.status != 'pending' %}
+                        <div class="card-item" style="border-left: 4px solid {{ '#10B981' if sub.status=='approved' else '#EF4444' }}">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                                <span style="font-weight:800; font-size:0.8rem; text-transform:uppercase; color:{{ '#10B981' if sub.status=='approved' else '#EF4444' }}">{{ sub.status }}</span>
+                                <span style="font-size:0.75rem; color:#ccc;">{{ sub.timestamp }}</span>
+                            </div>
+                            <p style="font-size:0.9rem; margin-bottom:5px;">{{ sub.text }}</p>
+                            <p style="font-size:0.8rem; color:#9CA3AF;">Result: {{ sub.final_decision_reason }}</p>
+                        </div>
+                        {% endif %}{% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmVote(action, url, remaining) {
+            
+            if (remaining <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Limit Reached!',
+                    html: `
+                        <div style="margin-bottom:10px;">You cannot change your vote anymore.</div>
+                        <div style="background:#FEF2F2; color:#B91C1C; padding:8px 15px; border-radius:8px; display:inline-block; font-weight:600;">
+                            Changes left: 0
+                        </div>
+                    `,
+                    confirmButtonColor: '#6B7280',
+                    confirmButtonText: 'Okay'
+                });
+                return;
+            }
+
+            let title = action === 'approve' ? 'Approve Contribution?' : 'Reject Contribution?';
+            let btnColor = action === 'approve' ? '#10B981' : '#EF4444';
+            let iconType = action === 'approve' ? 'question' : 'warning';
+
+            Swal.fire({
+                title: title,
+                html: `
+                    Are you sure you want to <b>${action.toUpperCase()}</b> this?<br><br>
+                    <div style="background:#F3F4F6; padding:8px 15px; border-radius:50px; display:inline-block; font-size:0.9rem; color:#555;">
+                        <i class="fas fa-exchange-alt" style="color:#F59E0B;"></i> 
+                        Remaining changes: <b>${remaining}</b>
+                    </div>
+                `,
+                icon: iconType,
+                showCancelButton: true,
+                confirmButtonColor: btnColor,
+                cancelButtonColor: '#6B7280',
+                confirmButtonText: `Yes, ${action} it!`
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            })
+        }
+
+        function confirmRetrain(url) {
+            Swal.fire({
+                title: 'Retrain AI Model?',
+                text: "This process might take a few seconds.",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#8B5CF6',
+                confirmButtonText: 'Yes, start training!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Training...',
+                        html: 'Updating knowledge base.',
+                        timer: 2000,
+                        timerProgressBar: true,
+                        didOpen: () => { Swal.showLoading(); }
+                    }).then(() => {
+                        window.location.href = url;
+                    });
+                }
+            })
+        }
+    </script>
+</body>
+</html>

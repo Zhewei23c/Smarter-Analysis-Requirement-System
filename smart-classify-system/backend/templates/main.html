@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function showLoading() { document.getElementById('loading-overlay').style.display = 'flex'; }
+    </script>
+    <style>
+        div.swal2-container { z-index: 20000 !important; }
+        
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border: 1px solid #eee;
+            z-index: 10000 !important; 
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            margin-top: 5px;
+        }
+
+        .suggestion-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background: #F3F4F6; }
+
+        .suggestion-text { font-size: 0.9rem; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80%; }
+        .suggestion-badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+        .badge-fr-small { background: #d1fae5; color: #065f46; }
+        .badge-nfr-small { background: #fee2e2; color: #991b1b; }
+
+        @keyframes highlightPulse {
+            0% { background-color: rgba(108, 99, 255, 0.0); transform: scale(1); }
+            20% { background-color: rgba(108, 99, 255, 0.2); transform: scale(1.02); }
+            100% { background-color: rgba(108, 99, 255, 0.0); transform: scale(1); }
+        }
+
+        .highlight-target {
+            animation: highlightPulse 2s ease-out;
+            border: 2px solid #6C63FF !important; 
+            z-index: 50;
+            position: relative;
+        }
+
+        #jumpSearchInput {
+            width: 100%;
+            padding: 12px 40px 12px 40px; 
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: #f9fafb;
+            transition: all 0.3s ease;
+        }
+
+        #jumpSearchInput:focus {
+            background: #fff;
+            border-color: #6C63FF;
+            box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.1);
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index:9999; align-items:center; justify-content:center; flex-direction:column;">
+        <div style="width:50px; height:50px; border:5px solid #eee; border-top:5px solid #4F46E5; border-radius:50%; animation:spin 1s linear infinite;"></div>
+        <p style="margin-top:15px; color:#4F46E5; font-weight:600;">Analyzing...</p>
+    </div>
+    <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+
+    <nav>
+        <div class="nav-logo" style="font-size:1.5rem; font-weight:800; color:#4F46E5;"><i class="fas fa-robot"></i> Smart Classify</div>
+        <div class="nav-links">
+            <a href="{{ url_for('user_history') }}">History</a>
+            <button onclick="document.getElementById('contributeModal').style.display='flex'" class="btn" style="width:auto; padding:8px 20px; background:#F59E0B;">Contribute</button>
+            <a href="{{ url_for('logout') }}" class="btn" style="width:auto; padding:8px 20px; background:#EF4444;">Log Out</a>
+        </div>
+    </nav>
+
+    <div class="auth-wrapper" style="padding-top: 100px; min-height: 90vh; justify-content: center;">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}{% for category, message in messages %}
+            <div class="alert alert-{{ category }}" style="width:100%; max-width:1200px; margin-bottom:20px;">{{ message }}</div>
+          {% endfor %}{% endif %}
+        {% endwith %}
+
+        {% if result %}
+        <div class="glass-card" style="max-width: 1200px; text-align: left; margin-bottom: 50px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:30px; border-bottom:1px solid #eee; padding-bottom:20px;">
+                <div><h2 style="margin:0;">Report</h2><p style="color:#666;">File: {{ filename }}</p></div>
+                <div style="display:flex; gap:10px;">
+                    <a href="{{ url_for('download_report', report_id=report_id) }}" class="btn" style="width:auto; background:#10B981;">Download PDF</a>
+                    <a href="{{ url_for('main') }}" class="btn" style="width:auto; background:#666;">New Analysis</a>
+                </div>
+            </div>
+
+            <div class="search-jump-container" style="position: relative; margin-bottom: 30px; max-width: 600px;">
+                <div style="position: relative;">
+                    <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #9CA3AF;"></i>
+                    <input type="text" id="jumpSearchInput" onkeyup="showSuggestions()" 
+                           placeholder="Type to find & jump (e.g., 'login', 'security')..." 
+                           autocomplete="off">
+                    <i class="fas fa-times" onclick="clearSearch()" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #9CA3AF; cursor: pointer; display: none;" id="clearSearchBtn"></i>
+                </div>
+    
+                <div id="suggestionsBox" class="suggestions-dropdown"></div>
+            </div>
+
+            <div style="display:flex; gap:40px; flex-wrap:wrap;">
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 style="color:#4F46E5; margin:0;">Functional ({{ result.functional_count }})</h3>
+                        <button onclick="openAdd('Functional')" class="btn" style="width:auto; padding:6px 12px; font-size:0.85rem;">+ Add</button>
+                    </div>
+                                        {% for req in result.requirements %}{% if req.type == 'Functional' %}
+                    <div class="card-item" style="border-left:4px solid #4F46E5; display:flex; flex-direction:column; align-items:flex-start;"> <div style="display:flex; width:100%; align-items:center;">
+                            <p style="flex:1; margin:0; font-weight:500;">{{ req.requirement }}</p>
+                            <div style="display:flex; gap:10px; margin-left:15px;">
+                                <button onclick="openEdit({{ loop.index0 }}, '{{ req.requirement|replace("'", "\\'") }}')" class="btn-icon btn-edit"><i class="fas fa-pen"></i></button>
+                                <button onclick="confirmDelete('{{ url_for('delete_requirement', report_id=report_id) }}', {{ loop.index0 }})" class="btn-icon btn-delete"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 8px; font-size: 0.75rem; color: #6B7280; background: #F3F4F6; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-robot" style="color: #4F46E5;"></i> 
+                            <span>Why: {{ req.reason }}</span>
+                        </div>
+
+                    </div>
+                    {% endif %}{% endfor %}
+
+                <div style="flex:1;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 style="color:#F59E0B; margin:0;">Non-Functional ({{ result.non_functional_count }})</h3>
+                        <button onclick="openAdd('Non-Functional')" class="btn" style="width:auto; padding:6px 12px; font-size:0.85rem; background:#F59E0B;">+ Add</button>
+                    </div>
+                    {% for req in result.requirements %}{% if req.type == 'Non-Functional' %}
+                    <div class="card-item" style="border-left:4px solid #F59E0B; display:flex; flex-direction:column; align-items:flex-start;"> <div style="display:flex; width:100%; align-items:center;">
+                            <p style="flex:1; margin:0; font-weight:500;">{{ req.requirement }}</p>
+                            <div style="display:flex; gap:10px; margin-left:15px;">
+                                <button onclick="openEdit({{ loop.index0 }}, '{{ req.requirement|replace("'", "\\'") }}')" class="btn-icon btn-edit"><i class="fas fa-pen"></i></button>
+                                                    <button onclick="confirmDelete('{{ url_for('delete_requirement', report_id=report_id) }}', {{ loop.index0 }})" class="btn-icon btn-delete"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 8px; font-size: 0.75rem; color: #6B7280; background: #FFF7ED; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="fas fa-magic" style="color: #F59E0B;"></i> 
+                            <span>Why: {{ req.reason }}</span>
+                        </div>
+
+                    </div>
+                    {% endif %}{% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="glass-card" style="max-width: 600px; text-align: center;">
+            <h2>Hi, {{ user }}! 👋</h2>
+            <p style="margin-bottom:30px;">Upload PDF to start analysis.</p>
+            <form action="{{ url_for('main') }}" method="POST" enctype="multipart/form-data">
+                <div onclick="document.getElementById('file').click()" style="border:3px dashed #C7D2FE; padding:60px; border-radius:24px; cursor:pointer; background:#F9FAFB; transition:0.3s;">
+                    <i class="fas fa-cloud-upload-alt" style="font-size:60px; color:#4F46E5; margin-bottom:20px;"></i>
+                    <p style="font-weight:700; color:#374151; font-size:1.1rem;">Click to Upload File</p>
+                    <p style="color:#9CA3AF;">Supported: PDF, DOCX</p>
+                    <input type="file" name="file" id="file" hidden onchange="this.form.submit(); showLoading();">
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    <div id="contributeModal" class="modal"><div class="modal-content">
+        <span class="close" onclick="this.parentElement.parentElement.style.display='none'">&times;</span>
+        <h3>🤝 Contribute Data</h3>
+        <p style="color:#666; font-size:0.9rem; margin-bottom:20px;">Help train the AI by submitting valid requirements.</p>
+        <form action="{{ url_for('submit_contribution') }}" method="POST">
+            <div class="form-group"><label>Requirement Text</label><textarea name="text" rows="3" placeholder="e.g. System must load in 2s" required></textarea></div>
+            <div style="display:flex; gap:15px;">
+                <div class="form-group" style="flex:1;"><label>Type</label><select name="type"><option value="Functional">Functional</option><option value="Non-Functional">Non-Functional</option></select></div>
+                <div class="form-group" style="flex:1;"><label>Domain</label><select name="system_type"><option value="General">General</option><option value="E-commerce">E-commerce</option><option value="Education">Education</option><option value="Banking">Banking</option></select></div>
+            </div>
+            <button type="submit" class="btn">Submit for Review</button>
+        </form>
+    </div></div>
+
+    {% if report_id %}
+    <div id="addModal" class="modal"><div class="modal-content">
+        <span class="close" onclick="this.parentElement.parentElement.style.display='none'">&times;</span>
+        <h3>Add Requirement</h3>
+        <form action="{{ url_for('add_requirement', report_id=report_id) }}" method="POST">
+            <input type="hidden" name="type" id="addType">
+            <div class="form-group"><label>Requirement Text</label><textarea name="requirement" rows="3" required></textarea></div>
+            <button type="submit" class="btn">Add to Report</button>
+        </form>
+    </div></div>
+
+    <div id="editModal" class="modal"><div class="modal-content">
+        <span class="close" onclick="this.parentElement.parentElement.style.display='none'">&times;</span>
+        <h3>Edit Requirement</h3>
+        <form action="{{ url_for('edit_requirement', report_id=report_id) }}" method="POST" id="editForm">
+            <input type="hidden" name="index" id="editIndex">
+            <div class="form-group"><label>Requirement Text</label><textarea name="requirement" id="editContent" rows="4" required></textarea></div>
+            <button type="button" onclick="submitEdit()" class="btn">Save Changes</button>
+        </form>
+    </div></div>
+    {% endif %}
+    
+    <form id="deleteForm" method="POST" style="display:none;"><input type="hidden" name="index" id="deleteIndex"></form>
+
+    <script>
+        function openAdd(type){ document.getElementById('addType').value=type; document.getElementById('addModal').style.display='flex'; }
+        
+        function openEdit(idx, txt) { 
+            document.getElementById('editIndex').value=idx; 
+            document.getElementById('editContent').value=txt; 
+            document.getElementById('editModal').style.display='flex'; 
+        }
+
+        function confirmDelete(actionUrl, index) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Do you really want to delete this requirement? This cannot be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33', 
+                cancelButtonColor: '#3085d6', 
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var form = document.getElementById('deleteForm');
+                    form.action = actionUrl;
+                    document.getElementById('deleteIndex').value = index;
+                    form.submit();
+                }
+            })
+        }
+
+        function submitEdit() {
+            Swal.fire({
+                title: 'Save Changes?',
+                text: "Are you sure you want to update this requirement?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4F46E5', 
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, save it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('editForm').submit();
+                }
+            })
+        }
+
+        window.onclick = function(e){ if(e.target.className==='modal') e.target.style.display='none'; }
+    </script>
+
+    <script>
+    let requirementsIndex = [];
+
+    document.addEventListener("DOMContentLoaded", function() {
+        console.log("🚀 System initializing...");
+        initSearchIndex();
+    });
+
+    function initSearchIndex() {
+        const cards = document.querySelectorAll(".card-item");
+        console.log(`📊 Found ${cards.length} requirement cards.`);
+
+        requirementsIndex = []; 
+
+        cards.forEach((card, index) => {
+            const cardId = `req-card-${index}`;
+            card.id = cardId;
+            const pTag = card.querySelector("p");
+            if (!pTag) return;
+
+            const textContent = pTag.innerText.trim();
+            const style = card.getAttribute("style");
+            let type = "Requirement";
+            if (style && style.includes("4F46E5")) type = "Functional";
+            if (style && style.includes("F59E0B")) type = "Non-Functional";
+
+            requirementsIndex.push({
+                id: cardId,
+                text: textContent,
+                type: type,
+                fullSearchText: (textContent + " " + type).toLowerCase()
+            });
+        });
+
+        console.log(`✅ Indexed ${requirementsIndex.length} items for search.`);
+    }
+    function showSuggestions() {
+        const input = document.getElementById("jumpSearchInput");
+        const box = document.getElementById("suggestionsBox");
+        const clearBtn = document.getElementById("clearSearchBtn");
+        
+        if (!input) return;
+
+        const query = input.value.toLowerCase().trim();
+        if (clearBtn) clearBtn.style.display = query.length > 0 ? "block" : "none";
+
+        if (query.length === 0) {
+            box.style.display = "none";
+            return;
+        }
+
+        const matches = requirementsIndex.filter(item => item.fullSearchText.includes(query));
+
+        if (matches.length > 0) {
+            box.style.display = "block";
+            box.innerHTML = matches.slice(0, 8).map(item => { 
+                const badgeClass = item.type === "Non-Functional" ? "badge-nfr-small" : "badge-fr-small";
+                const shortText = item.text.length > 60 ? item.text.substring(0, 60) + "..." : item.text;
+                
+                return `
+                    <div class="suggestion-item" onclick="jumpToRow('${item.id}')">
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <span class="suggestion-text" style="font-weight:500;">${shortText}</span>
+                            <span style="font-size:0.7rem; color:#999;">ID: ${item.id}</span>
+                        </div>
+                        <span class="suggestion-badge ${badgeClass}">${item.type}</span>
+                    </div>
+                `;
+            }).join("");
+        } else {
+            box.style.display = "block";
+            box.innerHTML = `<div style="padding:15px; color:#999; text-align:center;">No matches found</div>`;
+        }
+    }
+
+    function jumpToRow(cardId) {
+        const targetCard = document.getElementById(cardId);
+        const box = document.getElementById("suggestionsBox");
+        
+        if (targetCard) {
+            box.style.display = "none"; 
+            
+            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            document.querySelectorAll('.highlight-target').forEach(el => el.classList.remove('highlight-target'));
+
+            setTimeout(() => {
+                targetCard.classList.add('highlight-target');
+            }, 100);
+
+            setTimeout(() => {
+                targetCard.classList.remove('highlight-target');
+            }, 2500);
+        }
+    }
+
+    function clearSearch() {
+        const input = document.getElementById("jumpSearchInput");
+        if (input) {
+            input.value = "";
+            showSuggestions();
+            input.focus();
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        const container = document.querySelector('.search-jump-container');
+        const box = document.getElementById("suggestionsBox");
+        if (container && !container.contains(e.target) && box) {
+            box.style.display = "none";
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+Flask
+spacy
+scikit-learn
+python-docx
+PyPDF2
+pdfplumber
+joblib
+gunicorn
+requests
+reportlab

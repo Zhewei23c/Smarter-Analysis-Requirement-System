@@ -1,0 +1,8 @@
+The system shall allow users to register and login.
+Users shall be able to upload requirement documents in PDF or Word format.
+The application must respond to requests within 3 seconds.
+Data stored in the system must be encrypted at rest.
+Admins can add, edit and delete users.
+The UI should be responsive and work on mobile devices.
+The system shall export analysis results to a Word document.
+Support up to 1000 concurrent users.

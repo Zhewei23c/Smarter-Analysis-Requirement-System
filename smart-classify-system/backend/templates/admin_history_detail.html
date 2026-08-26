@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History Detail - {{ event.action|title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { 
+      background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 50%, #f5f7ff 100%);
+      background-attachment: fixed;
+      font-family:'Inter',sans-serif; 
+      color:#2d3748; 
+      margin:0; 
+      padding:0; 
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+        radial-gradient(circle at 40% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .detail-container { 
+      max-width:1100px; 
+      margin:30px auto; 
+      background:rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius:24px; 
+      padding:28px; 
+      box-shadow:0 8px 32px rgba(99, 102, 241, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      position: relative;
+      z-index: 1;
+    }
+    .detail-header { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+    .detail-title { 
+      font-size:1.6rem; 
+      font-weight:700; 
+      margin:0;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #3b82f6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .meta-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-top:12px; }
+    .meta-card { 
+      background:rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border:1px solid rgba(226, 232, 240, 0.8); 
+      border-radius:16px; 
+      padding:12px 16px;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.06);
+    }
+    .meta-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:#64748b; margin-bottom:6px; display:block; }
+    .meta-value { font-size:1rem; font-weight:600; color:#1e293b; }
+    .document-section { margin-top:24px; }
+    .section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .section-heading h2 { margin:0; font-size:1.25rem; font-weight:600; color:#1e293b; }
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-top:12px; }
+    .stat-card { 
+      background:linear-gradient(135deg, rgba(99, 102, 241, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius:16px; 
+      padding:18px; 
+      color:#fff;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .stat-number { font-size:1.6rem; font-weight:700; display:block; }
+    .stat-label { font-size:0.9rem; opacity:0.95; }
+    .document-box { 
+      border:1px solid rgba(226, 232, 240, 0.8); 
+      border-radius:16px; 
+      padding:18px; 
+      background:rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      max-height:420px; 
+      overflow:auto;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.06);
+    }
+    .highlight-functional { background:rgba(99, 102, 241, 0.2); border-radius:6px; padding:2px 4px; }
+    .highlight-non-functional { background:rgba(16, 185, 129, 0.25); border-radius:6px; padding:2px 4px; }
+    .requirements-section { margin-top:28px; }
+    .requirements-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+    .requirement-list { 
+      border:1px solid rgba(226, 232, 240, 0.8); 
+      border-radius:20px; 
+      padding:20px; 
+      background:rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08);
+    }
+    .list-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .list-header h3 { margin:0; font-size:1.1rem; font-weight:600; color:#1e293b; }
+    .list-content { display:flex; flex-direction:column; gap:12px; max-height:600px; overflow-y:auto; }
+    .requirement-card { 
+      border:1px solid rgba(226, 232, 240, 0.8); 
+      border-radius:16px; 
+      padding:16px; 
+      background:rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow:0 2px 8px rgba(99, 102, 241, 0.06);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .requirement-card:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+      transform: translateY(-2px);
+    }
+    .requirement-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .badge { display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px; font-size:0.75rem; font-weight:600; }
+    .badge-functional { background:rgba(99,102,241,0.15); color:#4f46e5; }
+    .badge-non-functional { background:rgba(16,185,129,0.18); color:#0f766e; }
+    .confidence { font-size:0.85rem; color:#64748b; }
+    .requirement-text { white-space:pre-wrap; font-size:0.95rem; line-height:1.55; color:#1e293b; margin-top:6px; }
+    @media (max-width:900px){
+      .requirements-grid { grid-template-columns:1fr; }
+    }
+    .detail-actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .btn { 
+      padding:10px 16px; 
+      border-radius:12px; 
+      border:none; 
+      font-weight:600; 
+      cursor:pointer; 
+      text-decoration:none; 
+      display:inline-flex; 
+      align-items:center; 
+      gap:8px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-primary { 
+      background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%); 
+      color:#fff;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+    }
+    .btn-secondary { 
+      background:rgba(241, 245, 249, 0.9);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color:#1e293b; 
+      border:1px solid rgba(226, 232, 240, 0.8);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.95);
+      transform: translateY(-2px);
+    }
+    .document-meta { font-size:0.85rem; color:#64748b; margin-top:8px; }
+    .empty-state { 
+      padding:30px; 
+      text-align:center; 
+      color:#64748b; 
+      background:rgba(241, 245, 249, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius:16px; 
+      border:1px dashed rgba(203, 213, 225, 0.6); 
+      margin-top:20px; 
+    }
+    @media (max-width:720px){
+      .detail-header { flex-direction:column; align-items:stretch; }
+    }
+  </style>
+</head>
+<body>
+  <div class="detail-container">
+    <div class="detail-header">
+      <div>
+        <h1 class="detail-title">{{ event.action|replace('_',' ')|title }} Event</h1>
+        <p class="document-meta">{{ event.filename or 'Document Analysis' }}</p>
+      </div>
+      <div class="detail-actions">
+        <a class="btn btn-secondary" href="{{ url_for('admin_dashboard') }}">← Back to Admin</a>
+        <a class="btn btn-primary" href="{{ url_for('logout') }}">Logout</a>
+      </div>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-card">
+        <span class="meta-label">Performed By</span>
+        <span class="meta-value">{{ event.username or 'Unknown' }}</span>
+      </div>
+      <div class="meta-card">
+        <span class="meta-label">Timestamp</span>
+        <span class="meta-value">{{ event.timestamp }}</span>
+      </div>
+      <div class="meta-card">
+        <span class="meta-label">Document</span>
+        <span class="meta-value">{{ event.filename or '—' }}</span>
+      </div>
+      {% if event.document_id %}
+      <div class="meta-card">
+        <span class="meta-label">Document ID</span>
+        <span class="meta-value">{{ event.document_id }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if analysis %}
+    <div class="document-section">
+      <div class="section-heading">
+        <h2>Document Analysis Snapshot</h2>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-number">{{ analysis.total_requirements or 0 }}</span>
+          <span class="stat-label">Total Requirements</span>
+        </div>
+        <div class="stat-card" style="background:#2563eb;">
+          <span class="stat-number">{{ analysis.functional_count or 0 }}</span>
+          <span class="stat-label">Functional</span>
+        </div>
+        <div class="stat-card" style="background:#f97316;">
+          <span class="stat-number">{{ analysis.non_functional_count or 0 }}</span>
+          <span class="stat-label">Non-Functional</span>
+        </div>
+      </div>
+
+      <p class="document-meta" style="margin-top:16px;">
+        {% if file_exists %}
+          File currently exists on server. Snapshot reflects state when event was recorded.
+        {% else %}
+          File not found on server; displaying stored snapshot only.
+        {% endif %}
+      </p>
+
+      {% if analysis.highlighted_text %}
+      <div class="document-box" id="documentBox">{{ analysis.highlighted_text|safe }}</div>
+      {% elif analysis.original_text_preview %}
+      <div class="document-box">{{ analysis.original_text_preview }}</div>
+      {% else %}
+      <div class="empty-state">No document preview available for this event.</div>
+      {% endif %}
+
+      {% if analysis.requirements %}
+      <div class="requirements-section">
+        <div class="requirements-grid">
+          <div class="requirement-list">
+            <div class="list-header">
+              <h3>Functional Requirements</h3>
+              <span class="badge badge-functional">{{ analysis.functional_count or 0 }}</span>
+            </div>
+            <div class="list-content">
+              {% if functional_reqs %}
+                {% for req in functional_reqs %}
+                <div class="requirement-card">
+                  <div class="requirement-header">
+                    <span class="badge badge-functional">#{{ loop.index }}</span>
+                    <div class="confidence">Confidence: {{ (req.confidence * 100) | round(0) if req.confidence is number else req.confidence }}%</div>
+                  </div>
+                  <div class="requirement-text">{{ req.requirement }}</div>
+                  {% if req.keywords %}
+                  <p class="document-meta" style="margin-top:8px;">Keywords: {{ req.keywords|join(', ') }}</p>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              {% else %}
+              <div class="empty-state" style="padding:20px; margin:0;">No functional requirements found.</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="requirement-list">
+            <div class="list-header">
+              <h3>Non-Functional Requirements</h3>
+              <span class="badge badge-non-functional">{{ analysis.non_functional_count or 0 }}</span>
+            </div>
+            <div class="list-content">
+              {% if non_functional_reqs %}
+                {% for req in non_functional_reqs %}
+                <div class="requirement-card">
+                  <div class="requirement-header">
+                    <span class="badge badge-non-functional">#{{ loop.index }}</span>
+                    <div class="confidence">Confidence: {{ (req.confidence * 100) | round(0) if req.confidence is number else req.confidence }}%</div>
+                  </div>
+                  <div class="requirement-text">{{ req.requirement }}</div>
+                  {% if req.keywords %}
+                  <p class="document-meta" style="margin-top:8px;">Keywords: {{ req.keywords|join(', ') }}</p>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              {% else %}
+              <div class="empty-state" style="padding:20px; margin:0;">No non-functional requirements found.</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+      <div class="empty-state">
+        No analysis snapshot stored for this history event.
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>
+

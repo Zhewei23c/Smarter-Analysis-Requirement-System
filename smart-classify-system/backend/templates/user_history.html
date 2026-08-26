@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav>
+        <h3 style="color: #4F46E5;">Smart Classify</h3>
+        <div style="display: flex; gap: 15px;">
+            <a href="{{ url_for('main') }}" class="btn" style="width: auto; background:#666;">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="glass-card" style="text-align: left;">
+            <h2 style="margin-bottom: 20px;">📂 My Analysis History</h2>
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f9f9f9; text-align:left;">
+                        <th style="padding:15px;">Date</th>
+                        <th style="padding:15px;">Filename</th>
+                        <th style="padding:15px;">Results</th>
+                        <th style="padding:15px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for id, h in history.items()|reverse %}
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:15px; color:#666;">{{ h.date }}</td>
+                        <td style="padding:15px; font-weight:600;">{{ h.filename }}</td>
+                        <td style="padding:15px;">
+                            <span style="color:#4F46E5;">{{ h.result.functional_count }} FR</span> / 
+                            <span style="color:#F59E0B;">{{ h.result.non_functional_count }} NFR</span>
+                        </td>
+                        <td style="padding:15px;">
+                            <a href="{{ url_for('main', report_id=id) }}" style="color:#4F46E5; margin-right:10px;"><i class="fas fa-eye"></i> View</a>
+                            <a href="{{ url_for('download_report', report_id=id) }}" style="color:#10B981;"><i class="fas fa-download"></i> PDF</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align:center; padding:20px;">No history yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,75 @@
+{
+    "1": {
+        "name": "qq1234",
+        "username": "qq1234",
+        "email": "qq1234@gmail.com",
+        "password": "qq1234",
+        "role": "user"
+    },
+    "702": {
+        "name": "Super Admin",
+        "username": "admin",
+        "email": "admin@system.com",
+        "password": "admin123",
+        "role": "admin"
+    },
+    "3495": {
+        "name": "Sarah Jones",
+        "username": "admin_sarah",
+        "email": "admin_sarah@system.com",
+        "password": "pass123",
+        "role": "admin"
+    },
+    "5353": {
+        "name": "Mike Chen",
+        "username": "admin_mike",
+        "email": "admin_mike@system.com",
+        "password": "pass123",
+        "role": "admin"
+    },
+    "3477": {
+        "name": "Lee Wei",
+        "username": "admin_lee",
+        "email": "admin_lee@system.com",
+        "password": "pass123",
+        "role": "admin"
+    },
+    "5055": {
+        "name": "Wong Ah",
+        "username": "admin_wong",
+        "email": "admin_wong@system.com",
+        "password": "pass123",
+        "role": "admin"
+    },
+    "7": {
+        "name": "qq12345",
+        "username": "qq12345",
+        "email": "qq12345@gmail.com",
+        "password": "qq12345",
+        "role": "user"
+    },
+    "107": {
+        "name": "aa",
+        "username": "aa123",
+        "email": "ngzhewei10@gmail.com",
+        "phone": "+601111911239",
+        "password": "aaaa123",
+        "role": "admin"
+    },
+    "108": {
+        "name": "Ng ",
+        "username": "Zhe Wei",
+        "email": "qq123456@gmail.com",
+        "phone": "+601111911239",
+        "password": "qq123456",
+        "role": "user"
+    },
+    "109": {
+        "name": "Ng Zhe Wei",
+        "username": "QQ1234",
+        "email": "ngzhewei10@gmail.com",
+        "phone": "+601111911239",
+        "password": "qq1234",
+        "role": "user"
+    }
+}
